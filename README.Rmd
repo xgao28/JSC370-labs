@@ -90,7 +90,7 @@ Once you are done setting up the project, you can now start working with the MET
 
 1. Load the `data.table` (and the `dtplyr` and `dplyr` packages), `mgcv`, `ggplot2`, `leaflet`, `kableExtra`.
 
-```{r packages warnings=FALSE}
+```{r packages, warnings=FALSE}
 library(data.table)
 library(dtplyr)
 library(dplyr)
@@ -101,7 +101,7 @@ library(kableExtra)
 ```
 
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 fn <- "https://raw.githubusercontent.com/JSC370/JSC370-2024/main/data/met_all_2023.gz"
 if (!file.exists("met_all_2023.gz"))
   download.file(fn, destfile = "met_all_2023.gz")
@@ -110,7 +110,7 @@ met <- data.table::fread("met_all_2023.gz")
 
 2. Load the met data from https://github.com/JSC370/JSC370-2024/main/data/met_all_2023.gz or  (Use https://raw.githubusercontent.com/JSC370/JSC370-2024/main/data/met_all_2023.gz to download programmatically), and also the station data. For the latter, you can use the code we used during lecture to pre-process the stations data:
 
-```{r stations-data, eval = FALSE}
+```{r stations-data, eval = TRUE}
 # Download the data
 stations <- fread("ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv")
 stations[, USAF := as.integer(USAF)]
@@ -131,25 +131,61 @@ stations[, n := 1:.N, by = .(USAF)]
 stations <- stations[n == 1,][, n := NULL]
 
 # Read in the met data and fix lat, lon, temp
+met$lat <- met$lat/1000
+met$lon <- met$lon/1000
+met$wind.sp <- met$wind.sp/10
+met$temp <- met$temp/10
+met$dew.point <- met$dew.point/10
+met$atm.press <- met$atm.press/10
 ```
 
 3. Merge the data as we did during the lecture. Use the `merge()` code and you can also try the tidy way with `left_join()`
 
 ```{r}
-
+mer <- merge(met, stations, 
+             by.x = "USAFID", by.y="USAF",
+             all.x = TRUE, all.y = FALSE)
 ```
 
 ## Question 1: Identifying Representative Stations
 
 Across all weather stations, which stations have the median values of temperature, wind speed, and atmospheric pressure? Using the `quantile()` function, identify these three stations. Do they coincide?
+```{r}
+colnames(mer)
+```
+
 
 ```{r}
-
+# Calculate the median values for temperature, wind speed, and atmospheric pressure
+national_median_temp <- quantile(mer$temp, probs = 0.5, na.rm = TRUE)
+national_median_wind_speed <- quantile(mer$wind.sp, probs = 0.5, na.rm = TRUE)
+national_median_atm_pressure <- quantile(mer$atm.press, probs = 0.5, na.rm = TRUE)
 ```
 
 Next identify the stations have these median values.
 
 ```{r}
+mer_by_stations <- mer %>% 
+  filter(!is.na(temp) & !is.na(wind.sp) & !is.na(atm.press)) %>%
+  group_by(USAFID) %>% 
+  summarise(
+    med_temp = median(temp),
+    med_wind_speed = median(wind.sp),
+    med_atm_press = median(atm.press),
+            )
+head(mer_by_stations)
+```
+
+
+```{r}
+# Find stations where these median values occur
+stations_median_temp <- unique(mer_by_stations$USAFID[which(mer_by_stations$med_temp == national_median_temp)])
+stations_median_wind_speed <- unique(mer_by_stations$USAFID[which(mer_by_stations$med_wind_speed == national_median_wind_speed)])
+stations_median_atm_pressure <- unique(mer_by_stations$USAFID[which(mer_by_stations$med_atm_press == national_median_atm_pressure)])
+# Output the stations with median values
+cat("Stations with median temperature:", stations_median_temp, "\n")
+cat("Stations with median wind speed:", stations_median_wind_speed, "\n")
+cat("Stations with median atmospheric pressure:", stations_median_atm_pressure, "\n")
 
 ```
 

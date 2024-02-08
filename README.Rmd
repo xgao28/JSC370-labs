@@ -99,6 +99,9 @@ library(mgcv)
 library(ggplot2)
 library(leaflet)
 library(kableExtra)
+library(tidyr)
+library(knitr)
+library(styler)
 ```
 
 
@@ -273,7 +276,7 @@ geo_closest_stations_by_state <- mere_by_stations %>%
   slice(1)
 
 # Create the leaflet map
-leaflet(geo_closest_stations_by_state) %>%
+map <- leaflet(geo_closest_stations_by_state) %>%
   addTiles() %>%
   addCircleMarkers(
     lng = ~lon,
@@ -305,7 +308,7 @@ leaflet(geo_closest_stations_by_state) %>%
                    "Elevation: ", elev, "<br>",
                    "Wind&temp distance: ", dist, "<br>")
   )
-
+map
 ```
 
 Knit the doc and save it on GitHub.
@@ -321,14 +324,7 @@ Use the following breakdown for elevation:
 - High: elev >= 401
 
 ```{r}
-# Load the required packages
-library(dplyr)
-library(tidyr)
-library(knitr)
-library(kableExtra)
-
-# Categorize stations based on elevation
-closest_stations_by_state <- closest_stations %>%
+mer <- mer %>%
   mutate(elev_category = case_when(
     elev < 93 ~ "Low",
     elev >= 93 & elev < 401 ~ "Mid",
@@ -336,22 +332,21 @@ closest_stations_by_state <- closest_stations %>%
   ))
 
 # Calculate average temperature for each elevation category within each state
-summary_table <- closest_stations_by_state %>%
-  group_by(state, elev_category) %>%
-  summarise(avg_temp = mean(med_temp, na.rm = TRUE))
+summary_table <- mer %>%
+  group_by(STATE, elev_category) %>%
+  summarise(avg_temp = mean(temp, na.rm = TRUE),.groups = "drop")
 
 # Reshape the data to have elevation categories as columns
-summary_table <- pivot_wider(summary_table, names_from = elev_category, values_from = avg_temp)
+summary_table <- spread(summary_table, key = elev_category, value = avg_temp)
 
 # Add row names for better readability
-rownames(summary_table) <- summary_table$state
+rownames(summary_table) <- summary_table$STATE
 
 # Print the summary table using kable
-kable(summary_table, format = "html") %>%
+kable(summary_table, caption = "average temperature by low, median, and high elevation stations", format = "pipe") %>%
   kable_styling(bootstrap_options = "striped", full_width = FALSE)
-
-
 ```
+
 
 
 Knit the document, commit your changes, and push them to GitHub. 

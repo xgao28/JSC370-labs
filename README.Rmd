@@ -150,9 +150,6 @@ mer <- merge(met, stations,
 ## Question 1: Identifying Representative Stations
 
 Across all weather stations, which stations have the median values of temperature, wind speed, and atmospheric pressure? Using the `quantile()` function, identify these three stations. Do they coincide?
-```{r}
-colnames(mer)
-```
 
 
 ```{r}
@@ -165,15 +162,20 @@ national_median_atm_pressure <- quantile(mer$atm.press, probs = 0.5, na.rm = TRU
 Next identify the stations have these median values.
 
 ```{r}
+get_mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
 mer_by_stations <- mer %>% 
-  filter(!is.na(temp) & !is.na(wind.sp) & !is.na(atm.press)) %>%
+  # filter(!is.na(temp) & !is.na(wind.sp) & !is.na(atm.press)) %>%
   group_by(USAFID) %>% 
   summarise(
-    med_temp = median(temp),
-    med_wind_speed = median(wind.sp),
-    med_atm_press = median(atm.press),
+    med_temp = median(temp, na.rm = TRUE),
+    med_wind_speed = median(wind.sp,na.rm = TRUE),
+    med_atm_press = median(atm.press,na.rm = TRUE),
+    state = get_mode(STATE)
             )
-head(mer_by_stations)
+nrow(mer_by_stations)
 ```
 
 
@@ -187,6 +189,8 @@ cat("Stations with median temperature:", stations_median_temp, "\n")
 cat("Stations with median wind speed:", stations_median_wind_speed, "\n")
 cat("Stations with median atmospheric pressure:", stations_median_atm_pressure, "\n")
 
+common_stations <- Reduce(intersect, list(stations_median_temp, stations_median_wind_speed, stations_median_atm_pressure))
+cat("Stations with national median temperature, wind speed, and atmospheric pressure:", common_stations)
 ```
 
 Knit the document, commit your changes, and save it on GitHub. Don't forget to add `README.md` to the tree, the first time you render it.
@@ -194,9 +198,46 @@ Knit the document, commit your changes, and save it on GitHub. Don't forget to a
 ## Question 2: Identifying Representative Stations per State
 
 Now let's find the weather stations by state with closest temperature and wind speed based on the euclidean distance from these medians. 
+```{r}
+temp_windsp_dist <- function(station_temp, state_temp, station_wsp, state_wsp) {
+  sqrt((state_temp - station_temp)^2+(state_wsp - station_wsp)^2)
+}
+
+mer_by_states <- mer %>% 
+  group_by(STATE) %>% 
+  summarise(
+    state_med_temp = median(temp, na.rm = TRUE),
+    state_med_wind_speed = median(wind.sp,na.rm = TRUE),
+    state_med_atm_press = median(atm.press,na.rm = TRUE),
+  )
+mer_by_states
+```
+
+
 
 ```{r}
+mere_by_stations <- mer_by_stations %>%
+  merge(mer_by_states) %>% 
+  mutate(dist = temp_windsp_dist(state_temp = state_med_temp,
+                                 station_temp = med_temp,
+                                 state_wsp = state_med_wind_speed,
+                                 station_wsp = med_wind_speed))
+  
 
+
+# Group by state and find closest station
+closest_stations <- mere_by_stations %>%
+  group_by(state) %>%
+  top_n(-1, dist) %>%
+  ungroup()
+
+# Select only necessary columns
+closest_stations <- closest_stations %>%
+  select(state, USAFID, dist) %>% 
+  unique()
+
+# Display the closest stations by state
+closest_stations
 ```
 
 Knit the doc and save it on GitHub.

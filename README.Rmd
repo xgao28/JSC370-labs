@@ -283,30 +283,21 @@ map <- leaflet(geo_closest_stations_by_state) %>%
     lat = ~lat,
     color = ~"purple",
     radius = 5,
-    popup = ~paste("USAFID: ", USAFID, "<br>",
-                   "Median Temperature: ", med_temp, "<br>",
-                   "Median Wind Speed: ", med_wind_speed, "<br>",
-                   "State: ", state, "<br>",
-                   "Latitude: ", lat, "<br>",
-                   "Longitude: ", lon, "<br>",
-                   "Elevation: ", elev, "<br>",
-                   "Geo distance: ", geo_dist, "<br>") 
-      
+    #popup = ~paste("USAFID: ", USAFID, "<br>",
+    #               "Median Temperature: ", med_temp, "<br>",
+    #               "Median Wind Speed: ", med_wind_speed, "<br>",
+    #               "State: ", state, "<br>",
+    #               "Latitude: ", lat, "<br>",
+    #               "Longitude: ", lon, "<br>",
+    #               "Elevation: ", elev, "<br>",
+    #               "Geo distance: ", geo_dist, "<br>") 
   ) %>% 
   addCircleMarkers(
     data = closest_stations,
     lng = ~lon,
     lat = ~lat,
     color = ~"orange",
-    radius = 2,
-    popup = ~paste("USAFID: ", USAFID, "<br>",
-                   "Median Temperature: ", med_temp, "<br>",
-                   "Median Wind Speed: ", med_wind_speed, "<br>",
-                   "State: ", state, "<br>",
-                   "Latitude: ", lat, "<br>",
-                   "Longitude: ", lon, "<br>",
-                   "Elevation: ", elev, "<br>",
-                   "Wind&temp distance: ", dist, "<br>")
+    radius = 2
   )
 map
 ```

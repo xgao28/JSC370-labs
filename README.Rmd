@@ -257,9 +257,7 @@ stations_median_wind_speed_df <- data.frame(USAFID = stations_median_wind_speed,
 stations_median_atm_pressure_df <- data.frame(USAFID = stations_median_atm_pressure, Median_Atmospheric_Pressure = national_median_atm_pressure)
 ```
 
-
 ```{r}
-# TODO: fix question 3
 calculate_distance <- function(lat1, lon1, lat2, lon2) {
   distance <- sqrt((lat2 - lat1)^2 + (lon2 - lon1)^2)
   return(distance)
@@ -274,27 +272,13 @@ geo_closest_stations_by_state <- mere_by_stations %>%
   arrange(geo_dist) %>%
   slice(1)
 
-# Combine the stations identified in the previous question with the closest stations by state
-all_stations <- bind_rows(stations_median_temp_df, stations_median_wind_speed_df, geo_closest_stations_by_state)
-
-# Convert latitude and longitude to numeric
-all_stations$lat <- as.numeric(all_stations$lat)
-all_stations$lon <- as.numeric(all_stations$lon)
-
-# Define colors for different types of stations
-colors <- c("Median Temperature" = "red", "Median Wind Speed" = "blue", "Geographic Median of State" = "purple")
-
 # Create the leaflet map
-leaflet(all_stations) %>%
+leaflet(geo_closest_stations_by_state) %>%
   addTiles() %>%
   addCircleMarkers(
     lng = ~lon,
     lat = ~lat,
-    color = ~ifelse(USAFID %in% unique(geo_closest_stations_by_state$USAFID), 
-                    colors["Geographic Median of State"], 
-                    ifelse(med_temp == national_median_temp, 
-                           colors["Median Temperature"], 
-                           colors["Median Wind Speed"])),
+    color = ~"purple",
     radius = 5,
     popup = ~paste("USAFID: ", USAFID, "<br>",
                    "Median Temperature: ", med_temp, "<br>",
@@ -303,8 +287,23 @@ leaflet(all_stations) %>%
                    "Latitude: ", lat, "<br>",
                    "Longitude: ", lon, "<br>",
                    "Elevation: ", elev, "<br>",
-                   "Distance to Median: ", dist, "<br>",
-                   "Geo distance: ", geo_dist, "<br>")
+                   "Geo distance: ", geo_dist, "<br>") 
+      
+  ) %>% 
+  addCircleMarkers(
+    data = closest_stations,
+    lng = ~lon,
+    lat = ~lat,
+    color = ~"orange",
+    radius = 2,
+    popup = ~paste("USAFID: ", USAFID, "<br>",
+                   "Median Temperature: ", med_temp, "<br>",
+                   "Median Wind Speed: ", med_wind_speed, "<br>",
+                   "State: ", state, "<br>",
+                   "Latitude: ", lat, "<br>",
+                   "Longitude: ", lon, "<br>",
+                   "Elevation: ", elev, "<br>",
+                   "Wind&temp distance: ", dist, "<br>")
   )
 
 ```

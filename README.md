@@ -322,6 +322,7 @@ mer_by_states
 ``` r
 mere_by_stations <- mer_by_stations %>%
   merge(mer_by_states) %>% 
+  filter(state == STATE) %>% 
   mutate(dist = temp_windsp_dist(state_temp = state_med_temp,
                                  station_temp = med_temp,
                                  state_wsp = state_med_wind_speed,
@@ -343,20 +344,20 @@ closest_stations <- closest_stations %>%
 closest_stations
 ```
 
-    ## # A tibble: 388 × 8
-    ##    USAFID med_temp med_wind_speed state   lat   lon  elev  dist
-    ##     <int>    <dbl>          <dbl> <chr> <dbl> <dbl> <dbl> <dbl>
-    ##  1 720708     23.3            2.6 MS     32.8 -88.8   165     0
-    ##  2 722054     23.3            2.6 AR     35.1 -90.2    65     0
-    ##  3 722073     23.3            2.6 NC     35.0 -78.4    45     0
-    ##  4 723307     23.3            2.6 MS     33.4 -88.6    80     0
-    ##  5 723347     23.3            2.6 TN     36   -89.4   103     0
-    ##  6 724350     23.3            2.6 KY     37.1 -88.8   126     0
-    ##  7 720348     24              2.6 GA     33.2 -83.2   117     0
-    ##  8 720632     24              2.6 SC     33.1 -80.3    17     0
-    ##  9 720636     24              2.6 MO     38.4 -93.7   251     0
-    ## 10 720738     24              2.6 GA     30.9 -83.9    80     0
-    ## # ℹ 378 more rows
+    ## # A tibble: 104 × 8
+    ##    USAFID med_temp med_wind_speed state   lat    lon  elev  dist
+    ##     <int>    <dbl>          <dbl> <chr> <dbl>  <dbl> <dbl> <dbl>
+    ##  1 720265     23.1            2.6 AL     32.9  -86.0   209 0.200
+    ##  2 722188     23.9            2.6 AR     35.2  -91.7    80 0.100
+    ##  3 723405     24.1            2.6 AR     34.9  -92.2    95 0.100
+    ##  4 743312     23.9            2.6 AR     34.0  -94.4   108 0.100
+    ##  5 722728     25.6            3.1 AZ     31.4 -111.   1198 0.5  
+    ##  6 722950     16.7            3.6 CA     33.9 -118.     99 0.300
+    ##  7 724695     15.1            3.6 CO     39.7 -105.   1726 0.100
+    ##  8 725040     19.4            3.6 CT     41.2  -73.1     5 0.5  
+    ##  9 724093     21.1            3.6 DE     38.7  -75.4    16 0.200
+    ## 10 722024     26.7            3.6 FL     25.9  -80.3     3 0    
+    ## # ℹ 94 more rows
 
 Knit the doc and save it on GitHub.
 
@@ -1206,14 +1207,14 @@ summary(linear_model)
     ## 
     ## Coefficients:
     ##                 Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)    1.176e+03  8.441e+00   139.3   <2e-16 ***
-    ## med_atm_press -1.142e+00  8.343e-03  -136.8   <2e-16 ***
+    ## (Intercept)   1175.93898   58.53149   20.09   <2e-16 ***
+    ## med_atm_press   -1.14162    0.05785  -19.73   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 3.759 on 52078 degrees of freedom
-    ## Multiple R-squared:  0.2645, Adjusted R-squared:  0.2644 
-    ## F-statistic: 1.872e+04 on 1 and 52078 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 3.762 on 1083 degrees of freedom
+    ## Multiple R-squared:  0.2645, Adjusted R-squared:  0.2638 
+    ## F-statistic: 389.4 on 1 and 1083 DF,  p-value: < 2.2e-16
 
 ``` r
 summary(spline_model)
@@ -1228,18 +1229,18 @@ summary(spline_model)
     ## 
     ## Parametric coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 20.93783    0.01604    1305   <2e-16 ***
+    ## (Intercept)  20.9378     0.1117   187.5   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Approximate significance of smooth terms:
-    ##                    edf Ref.df    F p-value    
-    ## s(med_atm_press) 8.993      9 2508  <2e-16 ***
+    ##                   edf Ref.df     F p-value    
+    ## s(med_atm_press) 8.67  8.968 51.52  <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## R-sq.(adj) =  0.302   Deviance explained = 30.2%
-    ## GCV = 13.406  Scale est. = 13.404    n = 52080
+    ## R-sq.(adj) =  0.297   Deviance explained = 30.2%
+    ## GCV = 13.647  Scale est. = 13.526    n = 1085
 
 ``` r
 plot(linear_model)
@@ -1255,8 +1256,8 @@ plot(spline_model)
 
 - the GAM (gam) model appears to be a better fit for the data compared
   to the linear model (lm) since The GAM has a higher adjusted R-squared
-  value (0.302) compared to the adjusted R-squared value of the linear
-  model (0.2644), indicating that the GAM explains more variance in the
+  value (0.297) compared to the adjusted R-squared value of the linear
+  model (0.2638), indicating that the GAM explains more variance in the
   response variable.
 - The GAM also has a lower residual standard error, suggesting better
   fit to the data.

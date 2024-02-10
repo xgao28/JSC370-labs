@@ -228,6 +228,7 @@ mer_by_states
 ```{r}
 mere_by_stations <- mer_by_stations %>%
   merge(mer_by_states) %>% 
+  filter(state == STATE) %>% 
   mutate(dist = temp_windsp_dist(state_temp = state_med_temp,
                                  station_temp = med_temp,
                                  state_wsp = state_med_wind_speed,
@@ -375,8 +376,8 @@ plot(spline_model)
 
 - the GAM (gam) model appears to be a better fit for the data 
   compared to the linear model (lm) since The GAM has a higher 
-  adjusted R-squared value (0.302) compared to the adjusted 
-  R-squared value of the linear model (0.2644), 
+  adjusted R-squared value (0.297) compared to the adjusted 
+  R-squared value of the linear model (0.2638), 
   indicating that the GAM explains more variance in the response variable.
 - The GAM also has a lower residual standard error, 
   suggesting better fit to the data.

@@ -102,6 +102,7 @@ library(kableExtra)
 library(tidyr)
 library(knitr)
 library(styler)
+library(webshot)
 ```
 
 
@@ -344,7 +345,7 @@ Let's practice running regression models with smooth functions on X. We need the
 
 - using your data with the median values per station, first create a lazy table. Filter out values of atmospheric pressure outside of the range 1000 to 1020. Examine the association between temperature (y) and atmospheric pressure (x). Create a scatterplot of the two variables using ggplot2. Add both a linear regression line and a smooth line.
 
-- fit both a linear model and a spline model (use `gam()` with a cubic regression spline on wind speed). Summarize and plot the results from the models and interpret which model is the best fit and why.
+- fit both a linear model and a spline model (use `gam()` with a cubic regression spline on atmospheric pressure). Summarize and plot the results from the models and interpret which model is the best fit and why.
 
 ```{r}
 
@@ -354,7 +355,7 @@ lazy_table <- mere_by_stations %>%
 scatterplot <- ggplot(lazy_table, aes(x = med_atm_press, y = med_temp)) +
   geom_point() +  
   geom_smooth(method = "lm", se = FALSE, color = "blue") +  # Linear regression line
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = FALSE, color = "red") +  # Smooth line with cubic regression spline
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cr"), se = FALSE, color = "red") +  # Smooth line with cubic regression spline
   labs(x = "Atmospheric Pressure", y = "Temperature") +  # Labels
   theme_minimal()
 
@@ -362,7 +363,7 @@ print(scatterplot)
 
 linear_model <- lm(med_temp ~ med_atm_press, data = lazy_table)
 
-spline_model <- gam(med_temp ~ s(med_wind_speed, bs = "cs"), data = lazy_table)
+spline_model <- gam(med_temp ~ s(med_atm_press, bs = "cr"), data = lazy_table)
 
 summary(linear_model)
 
@@ -372,11 +373,15 @@ plot(linear_model)
 plot(spline_model)
 ```
 
-- The linear model appears to be a better fit
-- since the linear model has a higher R-squared value (0.2645) 
-- compared to the adjusted R-squared value of the cubic spline model (0.0604), 
-- indicating that the linear model explains more variance in the response variable.
-- Also, the linear model has a larger F-statistic with a highly significant p-value.
+- the GAM (gam) model appears to be a better fit for the data 
+  compared to the linear model (lm) since The GAM has a higher 
+  adjusted R-squared value (0.302) compared to the adjusted 
+  R-squared value of the linear model (0.2644), 
+  indicating that the GAM explains more variance in the response variable.
+- The GAM also has a lower residual standard error, 
+  suggesting better fit to the data.
+- This might because the smooth term in the GAM captures 
+  the non-linear relationship between med_temp and med_atm_press.
 
 
 

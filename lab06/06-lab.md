@@ -2,6 +2,12 @@ Lab 06 - Regular Expressions and Web Scraping
 ================
 Xinxiang Gao
 
+``` r
+library(httr)
+library(xml2)
+library(stringr)
+```
+
 # Learning goals
 
 - Use a real world API to make queries and process the data.
@@ -31,21 +37,23 @@ Complete the lines of code:
 
 ``` r
 # Downloading the website
-website <- xml2::read_html("[URL]")
+website <- xml2::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2")
 
 # Finding the counts
-counts <- xml2::xml_find_first(website, "[XPath]")
+counts <- xml2::xml_find_first(website, "//span[@class='value']")
 
 # Turning it into text
 counts <- as.character(counts)
 
 # Extracting the data using regex
-stringr::str_extract(counts, "[REGEX FOR NUMBERS WITH COMMAS/DOTS]")
+stringr::str_extract(counts, "[0-9,]{7}")
 ```
+
+    ## [1] "218,712"
 
 - How many sars-cov-2 papers are there?
 
-*Answer here.*
+*<span class="value">218,712</span>*
 
 Don’t forget to commit your work!
 

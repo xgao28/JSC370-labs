@@ -76,8 +76,10 @@ The parameters passed to the query are documented [here](https://www.ncbi.nlm.ni
 ```{r papers-covid-toronto, eval=FALSE}
 library(httr)
 query_ids <- GET(
-  url   = "BASELINE URL",
-  query = list("QUERY PARAMETERS")
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  query = list("db" = "pubmed",
+    "term" = "covid19 toronto",
+    "retmax" = 300)
 )
 
 # Extracting the content of the response of GET
@@ -123,10 +125,13 @@ before, we will need to coerce the contents (results) to a list using:
     
 ```{r get-abstracts, eval = FALSE}
 publications <- GET(
-  url   = "BASELINE URL HERE",
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
   query = list(
-    "PARAMETERS OF THE QUERY"
-    )
+  "db" = "pubmed",
+  "id" = I(ids),  # Wrap in I() to avoid encoding commas
+  "retmax" = 300,
+  "rettype" = "abstract"
+)
 )
 
 # Turning the output into character vector
@@ -148,7 +153,7 @@ Write a regular expression that captures all such instances
 ```{r univ-institute-regex, eval = FALSE}
 institution <- str_extract_all(
   publications_txt,
-  "[YOUR REGULAR EXPRESSION HERE]"
+  "\\b(?:University\s+of|.+?\s+Institute\s+of)\s+[^\s,.;]+"
   ) 
 institution <- unlist(institution)
 as.data.frame(table(institution))
@@ -164,7 +169,7 @@ And tabulate the results
 ```{r school-department, eval = FALSE}
 schools_and_deps <- str_extract_all(
   abstracts_txt,
-  "[YOUR REGULAR EXPRESSION HERE]"
+  "\\b(?:School\\s+of|Department\\s+of)\\s+[^\\s,.;]+"
   )
 as.data.frame(table(schools_and_deps))
 ```

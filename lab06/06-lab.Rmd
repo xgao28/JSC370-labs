@@ -1,13 +1,14 @@
 ---
 title: "Lab 06 - Regular Expressions and Web Scraping"
 author: Xinxiang Gao
-output: github_document
+output: html_document
 always_allow_html: true
 ---
 
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(include  = TRUE)
 ```
+
 ```{r}
 library(httr)
 library(xml2)
@@ -173,7 +174,7 @@ schools_and_deps <- str_extract_all(
   publications_txt,
   "\\b(?:School\\s+of|Department\\s+of)\\s+[^\\s,.;]+"
   )
-kableExtra::scroll_box(knitr::kable(as.data.frame(table(schools_and_deps))), width = "800px", height = "400px")
+kableExtra::scroll_box(knitr::kable(as.data.frame(table(schools_and_deps))), width = "100%", height = "400px")
 ```
 
 ## Question 5: Form a database

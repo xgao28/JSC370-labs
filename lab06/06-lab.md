@@ -1546,10 +1546,10 @@ schools_and_deps <- str_extract_all(
   publications_txt,
   "\\b(?:School\\s+of|Department\\s+of)\\s+[^\\s,.;]+"
   )
-kableExtra::scroll_box(knitr::kable(as.data.frame(table(schools_and_deps))), width = "800px", height = "400px")
+kableExtra::scroll_box(knitr::kable(as.data.frame(table(schools_and_deps))), width = "100%", height = "400px")
 ```
 
-<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; overflow-x: scroll; width:800px; ">
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; overflow-x: scroll; width:100%; ">
 
 <table>
 <thead>

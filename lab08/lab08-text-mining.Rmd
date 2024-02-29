@@ -247,17 +247,22 @@ transcripts_dtm <- mt_samples |>
 
 transcripts_dtm <- as.matrix(transcripts_dtm)   
 
-transcripts_lda <- LDA(transcripts_dtm, k=5, control = list(seed = 1234))
+transcripts_lda <- LDA(transcripts_dtm, k=9, control = list(seed = 1234))
 transcripts_lda
 ```
 ```{r}
-library(broom)
-transcripts_tops_terms <-
-  tidy(transcripts_lda, matrix='beta') %>% 
-  group_by(topics) %>% 
-  slice_max(beta, n=10) %>% 
-  ungroup() %>% 
-  arrange(topic, beta)
+transcripts_tops_terms <- 
+  tidy(transcripts_lda, matrix = "beta") |>
+  group_by(topic) |>
+  slice_max(beta, n = 10) |> 
+  ungroup() |>
+  arrange(topic, -beta)
+transcripts_tops_terms |>
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
 ```
 
 

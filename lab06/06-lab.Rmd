@@ -161,6 +161,9 @@ institution <- str_extract_all(
 institution <- unlist(institution)
 kableExtra::scroll_box(knitr::kable(as.data.frame(table(institution))), width = "800px", height = "400px")
 ```
+```{r}
+nrow(as.data.frame(table(schools_and_deps)))
+```
 
 Repeat the exercise and this time focus on schools and departments in the form of
 
@@ -198,7 +201,7 @@ Now, extract the abstract and article title for each one of the elements of
 take advantage of vectorization of `stringr::str_extract`
 
 ```{r extracting-last-bit}
-abstracts <- str_extract(pub_char_list, "<AbstractText>.+?</AbstractText>")
+abstracts <- str_extract(pub_char_list, "<AbstractText.+?</AbstractText>")
 
 # Remove HTML tags
 abstracts <- str_remove_all(abstracts, "<.*?>")
@@ -212,6 +215,13 @@ na_abs_count <- sum(is.na(abstracts))
   - How many of these don't have an abstract? 
 
 `r na_abs_count`
+
+```{r}
+test_pub_char <- pub_char_list[6] %>% 
+  str_match_all("<Abstract>(|\n).+?</Abstract>")
+test_pub_char
+pub_char_list[6]
+```
 
 Now, the title
 

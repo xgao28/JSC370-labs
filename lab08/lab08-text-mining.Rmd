@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, echo=FALSE}
-knitr::opts_chunk$set(eval = F, include  = T)
+knitr::opts_chunk$set(eval = T, include  = T)
 ```
 
 # Learning goals
@@ -69,6 +69,11 @@ mt_samples |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+Some of the categories are related like Neurosurgery and Surgery as well as Neurology.
+
+Moreover, surgery has the highest distribution of medical specialties.
+
+
 ---
 
 ## Question 2: Tokenize
@@ -99,6 +104,8 @@ tokens |>
 wordcloud(words = tokens$word, freq = tokens$n, max.words = 100, colors = brewer.pal(8, "Dark2"))
 ```
 
+"The", "and", "of" and "a" indeed are the most frequent words in English as they support English syntax with no domain specific meanings, so while the result may be correct, it is less informative for our specific objective. 
+
 ---
 
 ## Question 3: Stopwords
@@ -113,6 +120,7 @@ What do we see know that we have removed stop words? Does it give us a better id
 ```{r}
 head(stopwords("english"))
 length(stopwords("english"))
+stopwords1 <- c(stopwords("english"), "left", "right", "also", "using")
 
 
 tokens <- mt_samples |>
@@ -121,7 +129,7 @@ tokens <- mt_samples |>
   group_by(word) %>% 
   summarize(word_frequency = n()) %>% 
   arrange(across(word_frequency, desc)) %>% 
-  filter(!(word %in% stopwords("english"))) |>
+  filter(!(word %in% stopwords1)) |>
   filter(!(grepl("[[:digit:]]+", word))) %>% 
   head(20)
 
@@ -137,6 +145,7 @@ tokens |>
 wordcloud(words = tokens$word, freq = tokens$word_frequency, max.words = 100, colors = brewer.pal(8, "Dark2"))
 ```
 
+After removing stop words, we can see the most frequent words like "patient", "procedure", "pain", and "blood" can be explained as they are medical-related.
 
 ---
 
@@ -172,6 +181,7 @@ tokens_bigram |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+Tri-grams capture more context than bi-grams because they consider sequences of three words instead of just two. Tri-grams can provide more detailed information about the relationships between words in a text, but they also increase the dimensionality of the data, potentially leading to sparser representations, especially for smaller datasets. 
 
 ---
 
@@ -247,7 +257,7 @@ transcripts_dtm <- mt_samples |>
 
 transcripts_dtm <- as.matrix(transcripts_dtm)   
 
-transcripts_lda <- LDA(transcripts_dtm, k=9, control = list(seed = 1234))
+transcripts_lda <- LDA(transcripts_dtm, k=6, control = list(seed = 1234))
 transcripts_lda
 ```
 ```{r}

@@ -22,8 +22,7 @@ We will work with two Starbucks datasets, one on the store locations (global) an
 
 ### 0. Install and load libraries
 
-```{r message=FALSE, echo=FALSE, warning=FALSE}
-
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(plotly)
 library(widgetframe)
@@ -35,14 +34,15 @@ library(skimr)
 - There are 4 datasets to read in, Starbucks locations, Starbucks nutrition, US population by state, and US state abbreviations.
 
 ```{r}
+sb_locs <-
+  read_csv("starbucks-locations.csv", show_col_types = FALSE)
 
-sb_locs <- read_csv("starbucks-locations.csv", show_col_types = FALSE)
-
-sb_nutr <- read_csv("starbucks-menu-nutrition.csv", show_col_types = FALSE)
+sb_nutr <-
+  read_csv("starbucks-menu-nutrition.csv", show_col_types = FALSE)
 
 usa_pop <- read_csv("us_state_pop.csv", show_col_types = FALSE)
 
-usa_states<-read_csv("states.csv", show_col_types = FALSE)
+usa_states <- read_csv("states.csv", show_col_types = FALSE)
 ```
 
 ### 2. Look at the data
@@ -76,33 +76,21 @@ skim(usa_states)
 
 
 ```{r}
-
-sb_usa <- sb_locs |> filter(
-  Country == "US"
-)
+sb_usa <- sb_locs |> filter(Country == "US")
 
 sb_locs_state <- sb_usa |>
-  group_by(
-    `State/Province`
-  ) |>
-  rename(
-    state = 'State/Province'
-  ) |>
-  summarize(
-    n_stores = n()
-  )
+  group_by(`State/Province`) |>
+  rename(state = 'State/Province') |>
+  summarize(n_stores = n())
 
-# need state abbreviations
-usa_pop_abbr <- 
+usa_pop_abbr <-
   full_join(usa_pop, usa_states,
-            by = join_by(state == State)) 
-  
-sb_locs_state <- full_join(
-  sb_locs_state,
-  usa_pop_abbr,
-  by = join_by(state==Abbreviation)
-)
-  
+            by = join_by(state == State))
+
+sb_locs_state <- full_join(sb_locs_state,
+                           usa_pop_abbr,
+                           by = join_by(state == Abbreviation))
+
 
 summary(sb_locs_state)
 ```
@@ -113,41 +101,56 @@ Answer the following questions:
 
 - Are the number of Starbucks proportional to the population of a state? (scatterplot)
 
-- Is the caloric distribution of Starbucks menu items different for drinks and food? (histogram)
-
-- What are the top 20 words in Starbucks menu items? (bar plot)
-
 ```{r}
-p1 <- ggplot(sb_locs_state, aes(x=population, y=n_stores, color=state)) +
-  geom_point(alpha= 0.8)
+p1 <-
+  ggplot(sb_locs_state, aes(x = population, y = n_stores, color = state)) +
+  geom_point(alpha = 0.8)
 
 ggplotly(p1)
 ```
 
+We can see that the values of population and number of stores are roughly linear in the scatterplot.
 
+- Is the caloric distribution of Starbucks menu items different for drinks and food? (histogram)
 
 ```{r}
-
-# Create the ggplot object with separate geom_histogram for food and drink
 p2 <- ggplot() +
-  geom_histogram(data = subset(sb_nutr, Category == "Food"), 
-                 aes(x = Calories), bins = 25, fill = "blue", color = "black", alpha = 0.5) +
-  geom_histogram(data = subset(sb_nutr, Category == "Drinks"), 
-                 aes(x = Calories), bins = 25, fill = "red", color = "black", alpha = 0.5) +
+  geom_histogram(
+    data = subset(sb_nutr, Category == "Food"),
+    aes(x = Calories, fill = "Food"),
+    bins = 25,
+    color = "black",
+    alpha = 0.5
+  ) +
+  geom_histogram(
+    data = subset(sb_nutr, Category == "Drinks"),
+    aes(x = Calories, fill = "Drinks"),
+    bins = 25,
+    color = "black",
+    alpha = 0.5
+  ) +
   labs(title = "Caloric Distribution of Starbucks Menu Items",
-       x = "Calories", y = "Frequency")
+       x = "Calories", y = "Frequency") +
+  scale_fill_manual(
+    values = c("blue", "red"),
+    name = "Category",
+    breaks = c("Food", "Drinks"),
+    labels = c("Food", "Drinks")
+  )
 
 ggplotly(p2)
 ```
 
+Food tend to have a higher average calories in distribution than drinks.
 
+- What are the top 20 words in Starbucks menu items? (bar plot)
 
 ```{r}
 
-p3<- sb_nutr |>
+p3 <- sb_nutr |>
   unnest_tokens(word, Item) %>%
   count(word, sort = TRUE) %>%
-  head(20) %>% 
+  head(20) %>%
   ggplot(aes(x = fct_reorder(word, n), y = n)) +
   geom_col(fill = "blue") +
   coord_flip() +
@@ -158,24 +161,21 @@ p3<- sb_nutr |>
 ggplotly(p3)
 ```
 
-
-
 ### 5. Scatterplots using `plot_ly()`
 
 - Create a scatterplot using `plot_ly()` representing the relationship between calories and carbs
 - Color points by category
 
-```{r}
+```{r, warning=FALSE}
 sb_nutr %>%
-  plot_ly(x = ~Calories,
-          y = ~`Carb. (g)`,
-          type = 'scatter',
-          mode = 'markers',
-          color = ~Category)
+  plot_ly(
+    x = ~ Calories,
+    y = ~ `Carb. (g)`,
+    type = 'scatter',
+    mode = 'markers',
+    color = ~ Category
+  )
 ```
-
-
-
 
 - Create this scatterplot but for the items consisting of the top 10 words
 - Color again by category
@@ -184,79 +184,104 @@ sb_nutr %>%
 - Enable `hovermode = "compare"`
   
 ```{r, warning=FALSE}
-topwords <- sb_nutr %>% 
-  unnest_tokens(word, Item, token = "words") %>% 
-  count(word, sort=T) %>% 
+topwords <- sb_nutr %>%
+  unnest_tokens(word, Item, token = "words") %>%
+  count(word, sort = T) %>%
   head(10)
-  
-sb_nutr %>% 
-  unnest_tokens(word, Item, token = "words") %>% 
-  filter(word %in% topwords$word) %>% 
-  plot_ly(x = ~Calories,
-          y = ~`Carb. (g)`,
-          type = 'scatter',
-          mode = 'markers',
-          color = ~Category,
-          text = ~paste0("Item: ", word, "<br>Calories: ", Calories, "<br>Carb. (g): ", `Carb. (g)`),
-          hoverinfo = 'text'
-          ) %>% 
-  layout(title = "Calories vs Carbohydrates",
-         xaxis = list(title = "Calories"),
-         yaxis = list(title = "Carb. (g)"),
-         hovermode = "compare")
+
+sb_nutr %>%
+  unnest_tokens(word, Item, token = "words") %>%
+  filter(word %in% topwords$word) %>%
+  plot_ly(
+    x = ~ Calories,
+    y = ~ `Carb. (g)`,
+    type = 'scatter',
+    mode = 'markers',
+    color = ~ Category,
+    text = ~ paste0(
+      "Item: ",
+      word,
+      "<br>Calories: ",
+      Calories,
+      "<br>Carb. (g): ",
+      `Carb. (g)`
+    ),
+    hoverinfo = 'text'
+  ) %>%
+  layout(
+    title = "Calories vs Carbohydrates",
+    xaxis = list(title = "Calories"),
+    yaxis = list(title = "Carb. (g)"),
+    hovermode = "compare"
+  )
 ```
 
  
-
-
 
 ### 6. `plot_ly` Boxplots
 
 - Create a boxplot of all of the nutritional variables in groups by the 10 item words.
 
-```{r}
-filtered_data <- sb_nutr %>% 
-  unnest_tokens(word, Item, token = "words") %>% 
+```{r, warning=FALSE}
+filtered_data <- sb_nutr %>%
+  unnest_tokens(word, Item, token = "words") %>%
   filter(word %in% topwords$word)
 
-boxplot <- filtered_data %>% 
-  plot_ly(x = ~word, type = "box", y = ~Calories, name = "Calories", alpha = 0.5) %>% 
-  add_boxplot(y = ~`Fat (g)`, name = "Fat", alpha = 0.5) %>% 
-  add_boxplot(y = ~`Carb. (g)`, name = "Carbohydrates", alpha = 0.5) %>% 
-  add_boxplot(y = ~`Fiber (g)`, name = "Fiber", alpha = 0.5) %>% 
-  add_boxplot(y = ~`Protein (g)`, name = "Protein", alpha = 0.5) %>% 
-  layout(title = "Boxplot of Nutritional Contents by Top Words in Item Names",
-         xaxis = list(title = "Top Words in Item Names"),
-         yaxis = list(title = "Value"),
-         hovermode = "compare") 
- # Create subplots for each boxplot
-boxplot
-```
+boxplot <- filtered_data %>%
+  plot_ly(
+    x = ~ word,
+    type = "box",
+    y = ~ Calories,
+    name = "Calories",
+    alpha = 0.5
+  ) %>%
+  add_boxplot(y = ~ `Fat (g)`,
+              name = "Fat",
+              alpha = 0.5) %>%
+  add_boxplot(y = ~ `Carb. (g)`,
+              name = "Carbohydrates",
+              alpha = 0.5) %>%
+  add_boxplot(y = ~ `Fiber (g)`,
+              name = "Fiber",
+              alpha = 0.5) %>%
+  add_boxplot(y = ~ `Protein (g)`,
+              name = "Protein",
+              alpha = 0.5) %>%
+  layout(
+    title = "Boxplot of Nutritional Contents by Top Words in Item Names",
+    xaxis = list(title = "Top Words in Item Names"),
+    yaxis = list(title = "Value"),
+    hovermode = "compare"
+  )
 
-## TODO: how to separate the boxplot
+boxplot %>% layout(boxmode = "group")
+```
 
 ### 7. 3D Scatterplot
 
 - Create a 3D scatterplot between Calories, Carbs, and Protein for the items containing the top 10 words
 - Do you see any patterns?
 
-```{r}
-filtered_data %>% 
-  plot_ly(x=~Calories,
-          y=~`Carb. (g)`,
-          z=~`Protein (g)`,
-          type="scatter3d",
-          mode="markers",
-          color=~word)
+```{r, warning=FALSE}
+filtered_data %>%
+  plot_ly(
+    x =  ~ Calories,
+    y =  ~ `Carb. (g)`,
+    z =  ~ `Protein (g)`,
+    type = "scatter3d",
+    mode = "markers",
+    color =  ~ word
+  )
 ```
 
+Items with more calories tend to have more carbohydrate and more protein. items whose name includes "sandwich", (which could be a type of sandwich) tend to have a higher value in all three nutrients.
 
 ### 8. `plot_ly` Map
 
 - Create a map to visualize the number of stores per state, and another for the population by state. Use subplot to put the maps side by side.
 - Describe the differences if any.
 
-```{r}
+```{r, warning=FALSE}
 # Set up mapping details
 set_map_details <- list(
   scope = 'usa',
@@ -269,15 +294,40 @@ set_map_details <- list(
 shadeLimit <- 125
 
 # Create hover text
-sb_locs_state$hover <- with(sb_locs_state, paste("Number of Starbucks: ", n_stores, '<br>', "State: ", state.y, '<br>', "Population: ", population))
+sb_locs_state$hover <-
+  with(
+    sb_locs_state,
+    paste(
+      "Number of Starbucks: ",
+      n_stores,
+      '<br>',
+      "State: ",
+      state.y,
+      '<br>',
+      "Population: ",
+      population
+    )
+  )
 
 # Create the map
-map1 <- plot_geo(sb_locs_state, locationmode="USA-states") %>% 
-  add_trace(z=~n_stores, text=~hover,locations=~state,color=~n_stores, colors="Purples") %>% 
-  layout(title="Starbucks stores by state", geo=set_map_details)
+map1 <- plot_geo(sb_locs_state, locationmode = "USA-states") %>%
+  add_trace(
+    z =  ~ n_stores,
+    text =  ~ hover,
+    locations =  ~ state,
+    color =  ~ n_stores,
+    colors = "Purples"
+  ) %>%
+  layout(title = "Starbucks stores by state", geo = set_map_details)
 
-map2 <- plot_geo(sb_locs_state, locationmode="USA-states") %>%
-  add_trace(z = ~population, locations = ~state, text = ~hover, color = ~population, colors = 'Reds') %>%
+map2 <- plot_geo(sb_locs_state, locationmode = "USA-states") %>%
+  add_trace(
+    z = ~ population,
+    locations = ~ state,
+    text = ~ hover,
+    color = ~ population,
+    colors = 'Reds'
+  ) %>%
   colorbar(title = "Population") %>%
   layout(title = "Population by State", geo = set_map_details)
 
